@@ -1,0 +1,29 @@
+{
+  "name": "node_server",
+  "version": "1.0.0",
+  "description": "Mock server for nextGen",
+  "main": "index.js",
+  "scripts": {
+    "test": "test",
+    "watch-server": "nodemon --watch 'src/**/*' -e ts,tsx --exec ts-node ./index.ts"
+  },
+  "author": "gsmall (gsengineering)",
+  "license": "ISC",
+  "dependencies": {
+    "@types/koa": "^2.11.2",
+    "jsonwebtoken": "^8.5.1",
+    "koa": "^2.11.0",
+    "koa-cors": "0.0.16",
+    "koa-logger": "^3.2.1",
+    "koa-router": "^8.0.8"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^8.3.8",
+    "@types/koa-cors": "0.0.0",
+    "@types/koa-logger": "^3.1.1",
+    "@types/koa-router": "^7.4.0",
+    "nodemon": "^2.0.2",
+    "ts-node": "^8.6.2",
+    "typescript": "^3.8.3"
+  }
+}
