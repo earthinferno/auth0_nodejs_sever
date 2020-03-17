@@ -24,7 +24,7 @@ apiRouter.get('/auth-url/:provider', async ctx => {
   switch (ctx.params.provider) {
     case 'google': {
       const { login_hint, scope, redirect_uri, prompt, state } = ctx.query;
-      const url = new GoogleOAuth({ redirect_uri, scope }).getAuthURL({
+      const url = new GoogleOAuth({ redirect_uri, scope }).getAuthURLToken({
         login_hint,
         prompt,
         state

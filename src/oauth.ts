@@ -17,6 +17,7 @@ export type ConfigOptions = {
 export interface IOAuth {
   config: ConfigOptions;
   getAuthURL: (options: GetAuthUrlOptions) => string;
+  getAuthURLToken: (options: GetAuthUrlOptions) => string;
   // getTokenFromCode: (code: string) => Promise<{ response?: any; error?: any }>;
 }
 
@@ -57,6 +58,34 @@ export class OAuth implements IOAuth {
     const queryParams = [
       `client_id=${client_id}`,
       'response_type=code',
+      `scope=${scope || this.config.scope}`,
+      `redirect_uri=${redirect_uri}`,
+      `nonce=${this.generateNonce()}`,
+      login_hint && `login_hint=${login_hint}`,
+      prompt && `prompt=${prompt}`,
+      response_mode && `response_mode=${response_mode}`,
+      state && `state=${state}`,
+      code_challenge_method && `code_challenge_method=${code_challenge_method}`,
+      code_challenge && `code_challenge=${code_challenge}`
+    ]
+      .filter(Boolean)
+      .join('&');
+    return `${AUTH_URL}?${queryParams}`;
+  }
+
+  getAuthURLToken({
+    login_hint,
+    scope,
+    prompt,
+    response_mode,
+    code_challenge,
+    code_challenge_method,
+    state
+  }: GetAuthUrlOptions) {
+    const { auth_url: AUTH_URL, client_id, redirect_uri } = this.config;
+    const queryParams = [
+      `client_id=${client_id}`,
+      'response_type=token',
       `scope=${scope || this.config.scope}`,
       `redirect_uri=${redirect_uri}`,
       `nonce=${this.generateNonce()}`,
