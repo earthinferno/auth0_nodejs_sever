@@ -88,7 +88,6 @@ export class OAuth implements IOAuth {
       'response_type=token',
       `scope=${scope || this.config.scope}`,
       `redirect_uri=${redirect_uri}`,
-      `nonce=${this.generateNonce()}`,
       login_hint && `login_hint=${login_hint}`,
       prompt && `prompt=${prompt}`,
       response_mode && `response_mode=${response_mode}`,

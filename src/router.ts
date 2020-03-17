@@ -19,6 +19,18 @@ apiRouter.get('/peace/:whom', async ctx => {
   }
 });
 
+//user-claims
+apiRouter.get('/user-claims/:provider', async ctx => {
+  console.log(ctx.params);
+  switch (ctx.params.provider) {
+    case 'google': {
+      const { token } = ctx.query;
+      ctx.body = `Claims ${ctx.params.provider}!. ${token}`;
+      return;
+    }
+  }
+});
+
 apiRouter.get('/auth-url/:provider', async ctx => {
   console.log(ctx.params);
   switch (ctx.params.provider) {
