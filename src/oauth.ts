@@ -5,6 +5,8 @@ import * as jwt from 'jsonwebtoken';
 
 import { GOOGLE, AZURE } from './oauth.config.json';
 
+import fetch from 'node-fetch';
+
 export type ConfigOptions = {
   client_id: string;
   client_secret: string;
@@ -18,7 +20,7 @@ export interface IOAuth {
   config: ConfigOptions;
   getAuthURL: (options: GetAuthUrlOptions) => string;
   getAuthURLToken: (options: GetAuthUrlOptions) => string;
-  // getTokenFromCode: (code: string) => Promise<{ response?: any; error?: any }>;
+  getTokenFromCode: (code: string) => Promise<{ response?: any; error?: any }>;
 }
 
 export type GetAuthUrlOptions = {
@@ -33,7 +35,7 @@ export type GetAuthUrlOptions = {
 
 export class OAuth implements IOAuth {
   config: ConfigOptions;
-  // tokenResponse: { [k: string]: any };
+  tokenResponse: { [k: string]: any };
 
   constructor(options: ConfigOptions) {
     this.config = options;
@@ -100,7 +102,6 @@ export class OAuth implements IOAuth {
     return `${AUTH_URL}?${queryParams}`;
   }
 
-  /*
   async getTokenFromCode(code: string) {
     const {
       client_id,
@@ -110,18 +111,18 @@ export class OAuth implements IOAuth {
       token_url
     } = this.config;
     try {
-      const response = await request
-        .post(token_url, {
-          resolveWithFullResponse: true
-        })
-        .form({
+      const response = await fetch(token_url, {
+        method: 'POST',
+        body: JSON.stringify({
           code: code,
           client_id,
           client_secret,
           redirect_uri,
           access_type: access_type || 'online',
           grant_type: 'authorization_code'
-        });
+        })
+      }).then(res => res.json());
+      console.log(`response: ${response}`);
       this.tokenResponse = response;
       return { response };
     } catch (e) {
@@ -129,18 +130,24 @@ export class OAuth implements IOAuth {
     }
   }
 
-  refreshToken() {
-    const { client_id, client_secret, access_type, token_url } = this.config;
-    if (access_type === 'offline' && this.tokenResponse) {
-      return request.post(token_url).form({
-        client_id,
-        client_secret,
-        refresh_token: this.tokenResponse.refresh_token,
-        grant_type: 'refresh_token'
-      });
-    }
-  }
-*/
+  // refreshToken() {
+  //   const { client_id, client_secret, access_type, token_url } = this.config;
+  //   if (access_type === 'offline' && this.tokenResponse) {
+  //     return fetch(token_url, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+  //       },
+  //       body: JSON.stringify({
+  //         client_id,
+  //         client_secret,
+  //         refresh_token: this.tokenResponse.refresh_token,
+  //         grant_type: 'refresh_token'
+  //       })
+  //     });
+  //   }
+  // }
+
   parseResponse(response: string) {
     try {
       return JSON.parse(response);

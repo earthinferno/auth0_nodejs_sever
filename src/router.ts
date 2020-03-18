@@ -24,10 +24,11 @@ apiRouter.get('/peace/:whom', async ctx => {
 
 apiRouter.get('/auth-url/:provider', async ctx => {
   console.log(ctx.params);
+  console.log('here auth-url');
   switch (ctx.params.provider) {
     case 'google': {
       const { login_hint, scope, redirect_uri, prompt, state } = ctx.query;
-      const url = new GoogleOAuth({ redirect_uri, scope }).getAuthURLToken({
+      const url = new GoogleOAuth({ redirect_uri, scope }).getAuthURL({
         login_hint,
         prompt,
         state
@@ -51,28 +52,65 @@ apiRouter.get('/auth-url/:provider', async ctx => {
   ctx.response.status = 400;
 });
 
-// user-claims
-apiRouter.get('/user-claims/:provider', async ctx => {
-  console.log(ctx.params);
-  switch (ctx.params.provider) {
-    case 'google': {
-      try {
-        const { token } = ctx.query;
-        const decodedResponse: any = jwt.decode(token);
-        console.log(decodedResponse);
+// // user-claims
+// apiRouter.get('/user-claims/:provider', async ctx => {
+//   console.log(ctx.params);
+//   switch (ctx.params.provider) {
+//     case 'google': {
+//       try {
+//         const { token } = ctx.query;
+//         const decodedResponse: any = jwt.decode(token);
+//         console.log(decodedResponse);
 
+//         const session = uuidv4();
+//         ctx.cookies.set('session', session);
+//         ctx.cookies.set('token', token);
+//         ctx.response.body = {
+//           session: session,
+//           token: token
+//         };
+//       } catch (e) {
+//         ctx.status = e.statusCode || 500;
+//         ctx.response.body = `error ${e.error}`;
+//       }
+//       return;
+//     }
+//   }
+// });
+
+apiRouter.get('/auth-from-code/:provider', async ctx => {
+  console.log(`here auth-from-code. ${ctx.params.provider}`);
+  if (ctx.params.provider === 'google') {
+    const { code, redirect_uri, scope } = ctx.query;
+    const GoogleOAuthInstance = new GoogleOAuth({ redirect_uri, scope });
+    const { response, error } = await GoogleOAuthInstance.getTokenFromCode(
+      code
+    );
+    if (response) {
+      ctx.response.status = 200;
+      console.log(response);
+      const decodedResponse: any = GoogleOAuthInstance.parseJWTToken(
+        response && response.id_token
+      );
+      if (decodedResponse) {
         const session = uuidv4();
+        // addOrUpdateUser({
+        //   emailId: decodedResponse.email,
+        //   tokenInfo: parsedResponse,
+        //   session
+        // });
         ctx.cookies.set('session', session);
-        ctx.cookies.set('token', token);
         ctx.response.body = {
           session: session,
-          token: token
+          token: response.access_token,
+          email: decodedResponse.email
         };
-      } catch (e) {
-        ctx.status = e.statusCode || 500;
-        ctx.response.body = `error ${e.error}`;
       }
-      return;
+    }
+    if (error) {
+      console.log(error);
+      ctx.response.status = error.statusCode || 500;
+      ctx.response.body = error.error;
     }
   }
 });
