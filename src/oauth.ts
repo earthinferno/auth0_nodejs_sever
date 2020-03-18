@@ -85,7 +85,7 @@ export class OAuth implements IOAuth {
     const { auth_url: AUTH_URL, client_id, redirect_uri } = this.config;
     const queryParams = [
       `client_id=${client_id}`,
-      'response_type=token',
+      'response_type=id_token',
       `scope=${scope || this.config.scope}`,
       `redirect_uri=${redirect_uri}`,
       login_hint && `login_hint=${login_hint}`,
