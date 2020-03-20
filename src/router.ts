@@ -8,13 +8,14 @@ const apiRouter = new router({
   prefix: '/api'
 });
 
+// Get a URL to connect to OpenId identity provider
 apiRouter.get('/auth-url/:provider', async ctx => {
   console.log(ctx.params);
   console.log('here auth-url');
   switch (ctx.params.provider) {
     case 'google': {
       const { login_hint, scope, redirect_uri, prompt, state } = ctx.query;
-      const url = new GoogleOAuth({ redirect_uri, scope }).getAuthURLToken({
+      const url = new GoogleOAuth({ redirect_uri, scope }).getAuthURL({
         login_hint,
         prompt,
         state
@@ -38,32 +39,7 @@ apiRouter.get('/auth-url/:provider', async ctx => {
   ctx.response.status = 400;
 });
 
-// // user-claims
-// apiRouter.get('/user-claims/:provider', async ctx => {
-//   console.log(ctx.params);
-//   switch (ctx.params.provider) {
-//     case 'google': {
-//       try {
-//         const { token } = ctx.query;
-//         const decodedResponse: any = jwt.decode(token);
-//         console.log(decodedResponse);
-
-//         const session = uuidv4();
-//         ctx.cookies.set('session', session);
-//         ctx.cookies.set('token', token);
-//         ctx.response.body = {
-//           session: session,
-//           token: token
-//         };
-//       } catch (e) {
-//         ctx.status = e.statusCode || 500;
-//         ctx.response.body = `error ${e.error}`;
-//       }
-//       return;
-//     }
-//   }
-// });
-
+// Send code to identity provider to get token_id and access_token
 apiRouter.get('/auth-from-code/:provider', async ctx => {
   console.log(`here auth-from-code. ${ctx.params.provider}`);
   if (ctx.params.provider === 'google') {
@@ -74,17 +50,12 @@ apiRouter.get('/auth-from-code/:provider', async ctx => {
     );
     if (response) {
       ctx.response.status = 200;
-      console.log(response);
+      console.log(`here ${response}`);
       const decodedResponse: any = GoogleOAuthInstance.parseJWTToken(
         response && response.id_token
       );
       if (decodedResponse) {
         const session = uuidv4();
-        // addOrUpdateUser({
-        //   emailId: decodedResponse.email,
-        //   tokenInfo: parsedResponse,
-        //   session
-        // });
         ctx.cookies.set('session', session);
         ctx.response.body = {
           session: session,
@@ -92,12 +63,36 @@ apiRouter.get('/auth-from-code/:provider', async ctx => {
           email: decodedResponse.email
         };
       }
+      ctx.redirect(
+        `http://localhost:8100/oath_callback?id_token=${response.id_token}&access_token=${response.access_token}`
+      );
     }
     if (error) {
+      console.log('error');
       console.log(error);
       ctx.response.status = error.statusCode || 500;
       ctx.response.body = error.error;
     }
+  }
+});
+
+// A redirection to the identity provider step 1 - get code.
+apiRouter.get('/oath_callback', async ctx => {
+  console.log(`here auth-from-code2.`);
+  try {
+    console.log(ctx.query);
+    const code = ctx.query.code;
+    const state = ctx.query.state;
+    const qParams = [
+      `code=${code}`,
+      `redirect_uri=http://localhost:3001/api/oath_callback`,
+      `scope=openid profile email`
+    ].join('&');
+    ctx.redirect(`/api/auth-from-code/${state}?${qParams}`);
+  } catch (error) {
+    ctx.response.status = error.statusCode || 500;
+    ctx.response.body = error.error;
+    return ctx.response;
   }
 });
 

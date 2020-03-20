@@ -99,6 +99,7 @@ export class OAuth implements IOAuth {
     ]
       .filter(Boolean)
       .join('&');
+
     return `${AUTH_URL}?${queryParams}`;
   }
 
@@ -110,23 +111,22 @@ export class OAuth implements IOAuth {
       access_type,
       token_url
     } = this.config;
-    try {
-      const response = await fetch(token_url, {
-        method: 'POST',
-        body: JSON.stringify({
-          code: code,
-          client_id,
-          client_secret,
-          redirect_uri,
-          access_type: access_type || 'online',
-          grant_type: 'authorization_code'
-        })
-      }).then(res => res.json());
-      console.log(`response: ${response}`);
-      this.tokenResponse = response;
+    const response = await fetch(token_url, {
+      method: 'POST',
+      body: JSON.stringify({
+        code: code,
+        client_id,
+        client_secret,
+        redirect_uri,
+        access_type: access_type,
+        grant_type: 'authorization_code'
+      })
+    }).then(res => res.json());
+    this.tokenResponse = response;
+    if (response.id_token) {
       return { response };
-    } catch (e) {
-      return { error: e };
+    } else {
+      return { error: response };
     }
   }
 
