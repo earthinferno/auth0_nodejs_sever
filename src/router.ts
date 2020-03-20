@@ -8,27 +8,13 @@ const apiRouter = new router({
   prefix: '/api'
 });
 
-apiRouter.get('/', async ctx => {
-  ctx.body = 'Hello World!';
-});
-
-apiRouter.get('/peace/:whom', async ctx => {
-  console.log(ctx.params);
-  switch (ctx.params.whom) {
-    case 'bob': {
-      ctx.body = `Peace ${ctx.params.whom}!`;
-      return;
-    }
-  }
-});
-
 apiRouter.get('/auth-url/:provider', async ctx => {
   console.log(ctx.params);
   console.log('here auth-url');
   switch (ctx.params.provider) {
     case 'google': {
       const { login_hint, scope, redirect_uri, prompt, state } = ctx.query;
-      const url = new GoogleOAuth({ redirect_uri, scope }).getAuthURL({
+      const url = new GoogleOAuth({ redirect_uri, scope }).getAuthURLToken({
         login_hint,
         prompt,
         state
@@ -102,7 +88,7 @@ apiRouter.get('/auth-from-code/:provider', async ctx => {
         ctx.cookies.set('session', session);
         ctx.response.body = {
           session: session,
-          token: response.access_token,
+          token: jwt.decode(response.access_token),
           email: decodedResponse.email
         };
       }
@@ -112,6 +98,15 @@ apiRouter.get('/auth-from-code/:provider', async ctx => {
       ctx.response.status = error.statusCode || 500;
       ctx.response.body = error.error;
     }
+  }
+});
+
+apiRouter.get('/authorise/:provider', async ctx => {
+  if (ctx.params.provider === 'google') {
+    console.log(`here authorise. ${ctx.params.provider}`);
+    ctx.response.body = {
+      claims: ['claim-a', 'claim-b']
+    };
   }
 });
 
